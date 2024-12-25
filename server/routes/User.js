@@ -274,48 +274,72 @@ router.get("/user/search/:searchedQuery", authMiddleware, async (req, res) => {
 
 router.get("/users/story", authMiddleware, async (req, res) => {
   try {
-    // Get the logged-in user's ID from the auth middleware
     const userId = req.user._id;
 
-    // Find the logged-in user to get their following list
+    // Find the logged-in user and populate following users
     const loggedInUser = await User.findById(userId).populate({
       path: "following.userId",
-      select: "story name userName", // Include the story, name, and userName fields
+      select: "story name userName profilePic",
+      // Only populate users who have stories
+      match: {
+        story: { $exists: true, $not: { $size: 0 } },
+      },
     });
 
-    if (!loggedInUser || !loggedInUser.following) {
-      return res.status(404).json({ message: "No following users found." });
+    if (!loggedInUser) {
+      return res.status(404).json({ message: "User not found." });
     }
 
-    // Extract stories from the following users
-    const stories = loggedInUser.following
-      .map((follow) => {
-        // Check if the user has uploaded any stories
-        const userStories = follow.userId.story;
-        if (userStories && userStories.length > 0) {
-          return userStories.map((story) => ({
-            userName: follow.userId.userName,
-            name: follow.userId.name,
-            profilePic: follow.userId.profilePic,
-            story,
-          }));
-        }
-        return null;
-      })
-      .filter((story) => story !== null) // Filter out users with no stories
-      .flat(); // Flatten the array if multiple users have stories
-
-    // Return the stories if found
-    if (stories.length === 0) {
+    if (!loggedInUser.following || loggedInUser.following.length === 0) {
       return res
         .status(404)
-        .json({ message: "No stories found in following users." });
+        .json({ message: "You are not following any users." });
     }
 
-    res.status(200).json({ stories });
+    // Extract stories from following users
+    const stories = loggedInUser.following
+      .filter((follow) => follow.userId && follow.userId.story) // Ensure both userId and story exist
+      .map((follow) => {
+        const { story, userName, name, profilePic, _id } = follow.userId;
+
+        // Check if story is an array before mapping
+        if (!Array.isArray(story)) {
+          return [];
+        }
+
+        // Map each story to include user details and story content
+        return story.map((storyItem) => ({
+          userId: _id,
+          userName,
+          name,
+          profilePic,
+          storyId: storyItem._id,
+          content: storyItem.story, // The actual story content
+          text: storyItem.text,
+          createdAt: storyItem.createdAt,
+        }));
+      })
+      .flat();
+
+    if (stories.length === 0) {
+      return res.status(404).json({
+        message: "No stories found from users you follow.",
+      });
+    }
+
+    // Sort stories by creation date (newest first)
+    stories.sort((a, b) => b.createdAt - a.createdAt);
+
+    res.status(200).json({
+      stories,
+      count: stories.length,
+    });
   } catch (error) {
     console.error("Error retrieving stories:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 });
 

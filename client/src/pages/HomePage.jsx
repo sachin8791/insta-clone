@@ -7,6 +7,7 @@ import { useAuth } from "../Contexts/AuthContext";
 import { useUi } from "../Contexts/UiContext";
 import { useSocial } from "@/Contexts/SocialContext";
 import { useComment } from "@/Contexts/CommentContext";
+import StoryViewer from "@/components/Story";
 
 function HomePage() {
   const { doComment, setDoComment, derivedPost } = useComment();
@@ -23,6 +24,8 @@ function HomePage() {
         setFollowPopup={setFollowPopup}
         followPopup={followPopup}
       />
+
+      <StoryViewer />
 
       {/* Left Sidebar */}
       <LeftSidebar
