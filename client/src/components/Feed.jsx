@@ -4,13 +4,13 @@ import RightSidebar from "./RightSidebar";
 import { ModernLoader } from "./ModernLoader";
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
-import { useMain } from "../Contexts/MainContext";
+import { useComment } from "@/Contexts/CommentContext";
 
 const token = localStorage.getItem("accessToken");
 const socket = io("http://localhost:5000");
 
 function Feed() {
-  const { setDoComment, derivedPost, setDerivedPost } = useMain();
+  const { setDoComment, derivedPost, setDerivedPost } = useComment();
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Start with true
   const [error, setError] = useState(null);

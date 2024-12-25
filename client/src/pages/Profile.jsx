@@ -5,20 +5,17 @@ import { ModernLoader } from "../components/ModernLoader";
 import { useContext, useState } from "react";
 import AuthedUserProfilePage from "../components/AuthedUserProfile";
 import SimpleUserProfile from "../components/SimpleUserProfile";
-import { useMain } from "../Contexts/MainContext";
 import { useUi } from "../Contexts/UiContext";
+import { useSocial } from "@/Contexts/SocialContext";
+import { useComment } from "@/Contexts/CommentContext";
 
 const token = localStorage.getItem("accessToken");
 
 function Profile() {
-  const {
-    derivedPost,
-    setDerivedPost,
-    followPopup,
-    setFollowPopup,
-    followArray,
-    setFollowArray,
-  } = useMain();
+  const { derivedPost, setDerivedPost } = useComment();
+
+  const { followPopup, setFollowPopup, followArray, setFollowArray } =
+    useSocial();
 
   const { setExtend } = useUi();
 
