@@ -11,16 +11,17 @@ const socket = io("http://localhost:5000");
 
 function Feed() {
   const { setDoComment, derivedPost, setDerivedPost } = useMain();
-
   const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with true
+  const [error, setError] = useState(null);
   const [triggerFetch, setTriggerFetch] = useState(0);
 
   useEffect(() => {
-    // Function to fetch initial posts
     async function fetchPosts() {
       try {
         setIsLoading(true);
+        setError(null); // Reset error state before fetching
+
         const fetchPostReq = await fetch("http://localhost:5000/posts", {
           method: "GET",
           headers: {
@@ -28,22 +29,26 @@ function Feed() {
             "Content-Type": "application/json",
           },
         });
+
+        if (!fetchPostReq.ok) {
+          throw new Error(`HTTP error! status: ${fetchPostReq.status}`);
+        }
+
         const postsData = await fetchPostReq.json();
         setPosts(postsData);
-
-        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching posts:", error);
+        setError("Failed to load posts. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     }
 
     fetchPosts();
 
-    // Socket event handler
     const handleNewUpload = (newPost) => {
       console.log("New post received:", newPost);
       setPosts((prevPosts) => {
-        // Check if post already exists to prevent duplicates
         const postExists = prevPosts.some((post) => post._id === newPost._id);
         if (postExists) {
           return prevPosts;
@@ -53,27 +58,48 @@ function Feed() {
       setTriggerFetch((num) => num + 1);
     };
 
-    // Set up socket listener
     socket.on("new-upload", handleNewUpload);
 
-    // Cleanup function
     return () => {
       socket.off("new-upload", handleNewUpload);
     };
-  }, [triggerFetch]); // Empty dependency array since we want this to run once on mount
+  }, [triggerFetch]);
 
-  {
-    posts.length === 0 && <p>There are no posts here</p>;
+  // Show loader while initial loading
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <ModernLoader size={80} color="#10b981" />
+      </div>
+    );
   }
 
+  // Show error if there is one
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  // Show no posts message if posts array is empty
+  if (posts.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-gray-500">
+        No posts found
+      </div>
+    );
+  }
+
+  // Show posts if we have them
   return (
     <div className="flex flex-row relative justify-evenly">
-      {isLoading && <ModernLoader size={80} color="#10b981" />}
       <div>
         <Stories />
-        {posts.map((post, index) => (
+        {posts.map((post) => (
           <Post
-            key={index} // Using unique post ID instead of index
+            key={post._id} // Using post._id instead of index
             caption={post.caption}
             createdAt={post.createdAt}
             likes={post.likes}

@@ -2,6 +2,30 @@ const mongoose = require("mongoose");
 require("../db/mongoose");
 const validator = require("validator");
 
+// Create a separate schema for stories to handle TTL properly
+const storySchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  story: {
+    type: String,
+    required: true,
+  },
+  text: {
+    type: String,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// Create TTL index on createdAt field
+storySchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+
+// Main user schema
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -56,27 +80,8 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-  story: [
-    {
-      userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: "User", // Adjust to match your user model name
-      },
-      story: {
-        type: String,
-        required: true,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now, // Automatically sets the timestamp
-        expires: 86400, // 24 hours in seconds
-      },
-      text: {
-        type: String,
-      },
-    },
-  ],
+  // Reference the separate story schema
+  story: [storySchema],
 });
 
 const User = mongoose.model("User", userSchema);

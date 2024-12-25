@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import {
   Bookmark,
@@ -7,8 +6,8 @@ import {
   MoreHorizontal,
   Send,
 } from "lucide-react";
-import { memo, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { memo, useEffect, useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { formatTimeDiff } from "../utils/formatTimeDiff";
 import useGetUser from "../hooks/GetUser";
 import { useLike } from "../hooks/useLike";
@@ -29,7 +28,6 @@ const Post = memo(function Post({
   setDerivedPost,
   comments,
 }) {
-  const { id } = useParams();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showOverlayHeart, setShowOverlayHeart] = useState(false);
   const { save, setSave } = useCheckSave(postId, token);
@@ -37,27 +35,39 @@ const Post = memo(function Post({
   const [showFollowButton, setShowFollowButton] = useState(false);
 
   const { liked, likesCount, handleLikeAction } = useLike(token, postId, likes);
-
   const { authUser } = useAuthUser(token);
 
-  async function handleLike() {
-    console.log(likes);
+  // Memoize the derived post data
+  const memoizedDerivedPost = useMemo(
+    () => ({
+      caption,
+      createdAt,
+      likes,
+      post,
+      userId,
+      postId,
+      comments,
+      likesCount,
+    }),
+    [caption, createdAt, likes, post, userId, postId, comments, likesCount]
+  );
 
+  // Callback handlers
+  const handleLike = useCallback(async () => {
     await handleLikeAction();
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 300);
-  }
+  }, [handleLikeAction]);
 
-  async function handleDoubleClick() {
+  const handleDoubleClick = useCallback(async () => {
     if (!liked) {
       await handleLikeAction();
     }
-
     setShowOverlayHeart(true);
     setTimeout(() => setShowOverlayHeart(false), 2000);
-  }
+  }, [liked, handleLikeAction]);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     try {
       const endpoint = save
         ? `http://localhost:5000/user/unsave/${postId}`
@@ -76,17 +86,36 @@ const Post = memo(function Post({
         return;
       }
 
-      // Toggle the save state after successful request
       setSave((prevSave) => !prevSave);
     } catch (error) {
-      // Handle any network errors silently
-      console.log("Error saving/unsaving post");
+      console.log(` ${error}Error saving/unsaving post`);
     }
-  }
+  }, [save, postId, setSave]);
+
+  const handleComment = useCallback(() => {
+    setDerivedPost(memoizedDerivedPost);
+    setDoComment(true);
+  }, [setDerivedPost, setDoComment, memoizedDerivedPost]);
+
+  const handleFollow = useCallback(async () => {
+    const followReq = await fetch(
+      `http://localhost:5000/user/follow/${userId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (followReq.status === 200) {
+      setShowFollowButton(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
     const shouldHideFollowButton = authUser._id === userId;
-
     if (shouldHideFollowButton) {
       setShowFollowButton(false);
     }
@@ -115,89 +144,76 @@ const Post = memo(function Post({
     checkIsFollowing();
   }, [userId]);
 
-  async function handleFollow() {
-    const followReq = await fetch(
-      `http://localhost:5000/user/follow/${userId}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const res = await followReq.json();
-
-    if (followReq.status === 200) {
-      setShowFollowButton(false);
-    }
-  }
+  // Memoize the UI sections
+  const PostHeader = useMemo(
+    () => (
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full overflow-hidden">
+            {postUser.profilePic === "" ? (
+              <img
+                src="https://img.freepik.com/premium-vector/silver-membership-icon-default-avatar-profile-icon-membership-icon-social-media-user-image-vector-illustration_561158-4215.jpg"
+                alt="User Avatar"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <img
+                src={postUser.profilePic}
+                alt="User Avatar"
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Link to={`profile/${userId}`} className="text-sm font-medium">
+              {postUser.userName}
+            </Link>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              x="0px"
+              y="0px"
+              width="100"
+              height="100"
+              viewBox="0 0 48 48"
+              className="h-4 w-4 mt-1"
+            >
+              <polygon
+                fill="#42a5f5"
+                points="29.62,3 33.053,8.308 39.367,8.624 39.686,14.937 44.997,18.367 42.116,23.995 45,29.62 39.692,33.053 39.376,39.367 33.063,39.686 29.633,44.997 24.005,42.116 18.38,45 14.947,39.692 8.633,39.376 8.314,33.063 3.003,29.633 5.884,24.005 3,18.38 8.308,14.947 8.624,8.633 14.937,8.314 18.367,3.003 23.995,5.884"
+              ></polygon>
+              <polygon
+                fill="#fff"
+                points="21.396,31.255 14.899,24.76 17.021,22.639 21.428,27.046 30.996,17.772 33.084,19.926"
+              ></polygon>
+            </svg>
+            <span className="text-gray-500">•</span>
+            <span className="text-sm text-gray-500">
+              {formatTimeDiff(createdAt)}
+            </span>
+            {authUser._id !== userId && showFollowButton && (
+              <FollowButton
+                onClick={handleFollow}
+                styles="px-2 py-1 text-primary font-semibold ml-2 text-sm"
+              >
+                Follow
+              </FollowButton>
+            )}
+          </div>
+        </div>
+        <button className="p-1 rounded-full hover:bg-gray-100">
+          <MoreHorizontal className="h-5 w-5" />
+          <span className="sr-only">More options</span>
+        </button>
+      </div>
+    ),
+    [postUser, userId, authUser._id, showFollowButton, createdAt, handleFollow]
+  );
 
   return (
     <div className="mx-auto max-w-xl p-4">
       <div className="rounded-md border">
-        {/* Post Header */}
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full overflow-hidden">
-              {postUser.profilePic === "" ? (
-                <img
-                  src="https://img.freepik.com/premium-vector/silver-membership-icon-default-avatar-profile-icon-membership-icon-social-media-user-image-vector-illustration_561158-4215.jpg"
-                  alt="User Avatar"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <img
-                  src={postUser.profilePic}
-                  alt="User Avatar"
-                  className="h-full w-full object-cover"
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              <Link to={`profile/${userId}`} className="text-sm font-medium">
-                {postUser.userName}
-              </Link>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                x="0px"
-                y="0px"
-                width="100"
-                height="100"
-                viewBox="0 0 48 48"
-                className="h-4 w-4 mt-1"
-              >
-                <polygon
-                  fill="#42a5f5"
-                  points="29.62,3 33.053,8.308 39.367,8.624 39.686,14.937 44.997,18.367 42.116,23.995 45,29.62 39.692,33.053 39.376,39.367 33.063,39.686 29.633,44.997 24.005,42.116 18.38,45 14.947,39.692 8.633,39.376 8.314,33.063 3.003,29.633 5.884,24.005 3,18.38 8.308,14.947 8.624,8.633 14.937,8.314 18.367,3.003 23.995,5.884"
-                ></polygon>
-                <polygon
-                  fill="#fff"
-                  points="21.396,31.255 14.899,24.76 17.021,22.639 21.428,27.046 30.996,17.772 33.084,19.926"
-                ></polygon>
-              </svg>
-              <span className="text-gray-500">•</span>
-              <span className="text-sm text-gray-500">
-                {formatTimeDiff(createdAt)}
-              </span>
-              {authUser._id !== userId && showFollowButton && (
-                <FollowButton
-                  onClick={handleFollow}
-                  styles="px-2 py-1 text-primary font-semibold ml-2 text-sm"
-                >
-                  Follow
-                </FollowButton>
-              )}
-            </div>
-          </div>
-          <button className="p-1 rounded-full hover:bg-gray-100">
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="sr-only">More options</span>
-          </button>
-        </div>
+        {PostHeader}
 
-        {/* Post Content */}
         <div className="aspect-square bg-gray-100 relative">
           <img
             src={post}
@@ -216,7 +232,6 @@ const Post = memo(function Post({
           )}
         </div>
 
-        {/* Post Actions */}
         <div className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex gap-4">
@@ -242,20 +257,7 @@ const Post = memo(function Post({
                 <span className="sr-only">Like</span>
               </button>
               <button
-                onClick={() => {
-                  setDerivedPost({
-                    caption,
-                    createdAt,
-                    likes,
-                    post,
-                    userId,
-                    postId,
-                    comments,
-                    likesCount,
-                  });
-                  setDoComment(true);
-                  console.log(likes);
-                }}
+                onClick={handleComment}
                 className="p-1 rounded-full hover:bg-gray-100"
               >
                 <MessageCircle className="h-6 w-6" />
@@ -277,7 +279,6 @@ const Post = memo(function Post({
               <span className="sr-only">Save</span>
             </button>
           </div>
-          {/* Likes and Caption */}
           <div className="mt-2">
             <p className="text-sm font-medium">{likesCount} likes</p>
           </div>
