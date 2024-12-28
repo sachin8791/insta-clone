@@ -296,43 +296,60 @@ router.get("/users/story", authMiddleware, async (req, res) => {
         .json({ message: "You are not following any users." });
     }
 
-    // Extract stories from following users
-    const stories = loggedInUser.following
+    // Group stories by user
+    const groupedStories = loggedInUser.following
       .filter((follow) => follow.userId && follow.userId.story) // Ensure both userId and story exist
       .map((follow) => {
         const { story, userName, name, profilePic, _id } = follow.userId;
 
-        // Check if story is an array before mapping
+        // Check if story is an array before processing
         if (!Array.isArray(story)) {
-          return [];
+          return null;
         }
 
-        // Map each story to include user details and story content
-        return story.map((storyItem) => ({
+        // Create user object with their stories array
+        return {
           userId: _id,
           userName,
           name,
           profilePic,
-          storyId: storyItem._id,
-          content: storyItem.story, // The actual story content
-          text: storyItem.text,
-          createdAt: storyItem.createdAt,
-        }));
+          stories: story.map((storyItem) => ({
+            storyId: storyItem._id,
+            content: storyItem.story, // The actual story content
+            text: storyItem.text,
+            createdAt: storyItem.createdAt,
+          })),
+        };
       })
-      .flat();
+      .filter(Boolean); // Remove any null entries
 
-    if (stories.length === 0) {
+    if (groupedStories.length === 0) {
       return res.status(404).json({
         message: "No stories found from users you follow.",
       });
     }
 
-    // Sort stories by creation date (newest first)
-    stories.sort((a, b) => b.createdAt - a.createdAt);
+    // Sort users by their most recent story
+    groupedStories.sort((a, b) => {
+      const aLatest = Math.max(...a.stories.map((s) => new Date(s.createdAt)));
+      const bLatest = Math.max(...b.stories.map((s) => new Date(s.createdAt)));
+      return bLatest - aLatest;
+    });
+
+    // Sort stories within each user's array by creation date (newest first)
+    groupedStories.forEach((user) => {
+      user.stories.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    });
 
     res.status(200).json({
-      stories,
-      count: stories.length,
+      users: groupedStories,
+      totalUsers: groupedStories.length,
+      totalStories: groupedStories.reduce(
+        (sum, user) => sum + user.stories.length,
+        0
+      ),
     });
   } catch (error) {
     console.error("Error retrieving stories:", error);

@@ -2,13 +2,8 @@ const mongoose = require("mongoose");
 require("../db/mongoose");
 const validator = require("validator");
 
-// Create a separate schema for stories to handle TTL properly
+// Create a separate schema for stories but don't create a model from it
 const storySchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "User",
-  },
   story: {
     type: String,
     required: true,
@@ -19,11 +14,9 @@ const storySchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+    expires: 86400, // 24 hours in seconds
   },
 });
-
-// Create TTL index on createdAt field
-storySchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
 // Main user schema
 const userSchema = new mongoose.Schema({
@@ -82,9 +75,55 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-  // Reference the separate story schema
   story: [storySchema],
 });
+
+// Static method to clean all expired stories
+userSchema.statics.cleanAllExpiredStories = async function () {
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  try {
+    const result = await this.updateMany(
+      {},
+      {
+        $pull: {
+          story: {
+            createdAt: { $lt: twentyFourHoursAgo },
+          },
+        },
+      }
+    );
+    console.log(
+      `Cleaned up expired stories. Modified ${result.modifiedCount} users.`
+    );
+    return result;
+  } catch (error) {
+    console.error("Error cleaning up stories:", error);
+    throw error;
+  }
+};
+
+// Pre-save middleware to clean expired stories
+userSchema.pre("save", async function (next) {
+  const now = new Date();
+  this.story = this.story.filter((story) => {
+    const storyAge = (now - story.createdAt) / 1000; // Convert to seconds
+    return storyAge < 86400; // Keep stories less than 24 hours old
+  });
+  next();
+});
+
+// Set up periodic cleanup task
+const cleanupExpiredStories = async () => {
+  try {
+    await User.cleanAllExpiredStories();
+  } catch (error) {
+    console.error("Error in periodic cleanup:", error);
+  }
+};
+
+// Run cleanup every hour
+setInterval(cleanupExpiredStories, 3600000); // 1 hour in milliseconds
 
 const User = mongoose.model("User", userSchema);
 
