@@ -18,7 +18,7 @@ function HomePage() {
   if (!isAuthenticated) return <p>Please first authenticate</p>;
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
+    <div className="flex md:flex-row min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
       <SeeFollows
         followArray={followArray}
         setFollowPopup={setFollowPopup}

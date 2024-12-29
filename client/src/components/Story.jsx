@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useStory } from "@/Contexts/StoryContext";
 import { formatTimeDiff } from "@/utils/formatTimeDiff";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function StoryViewer() {
   // Rest of the JSX remains exactly the same
@@ -70,7 +71,13 @@ export default function StoryViewer() {
                   <img src={storyUser.profilePic} alt="User avatar" />
                 </Avatar>
                 <div className="text-white text-sm">
-                  <span className="font-semibold">{storyUser.userName}</span>
+                  <Link
+                    onClick={() => setIsVisible(false)}
+                    to={`/profile/${storyUser.userId}`}
+                    className="font-semibold"
+                  >
+                    {storyUser.userName}
+                  </Link>
                   <span className="ml-2 opacity-70">
                     {formatTimeDiff(sampleStories[currentStory].createdAt)}
                   </span>
@@ -153,22 +160,6 @@ export default function StoryViewer() {
                     className="w-6 h-6"
                   >
                     <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-                  </svg>
-                </Button>
-                <Button variant="ghost" size="icon" className="text-white">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-6 h-6"
-                  >
-                    <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
                   </svg>
                 </Button>
               </div>

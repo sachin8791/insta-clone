@@ -20,7 +20,7 @@ import useCheckSave from "../hooks/useCheckSave";
 
 const token = localStorage.getItem("accessToken");
 
-function CommentSection({ setDoComment, derivedPost, setCounter, setExtend }) {
+function CommentSection({ setDoComment, derivedPost, setExtend }) {
   const postUser = useGetUser(derivedPost.userId, token);
   const [showOverlayHeart, setShowOverlayHeart] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -165,17 +165,16 @@ function CommentSection({ setDoComment, derivedPost, setCounter, setExtend }) {
         onClick={() => {
           setDoComment(false);
           setExtend(false);
-          setCounter((count) => count + 1);
         }}
         className="fixed top-4 right-4 text-white cursor-pointer"
       />
       <div
         onDoubleClick={handleDoubleClick}
-        className="w-4/5 h-4/5 flex flex-row relative bg-red-500"
+        className="md:w-4/5 md:h-4/5  w-[350px] h-[400px] flex md:flex-row flex-col relative bg-red-500"
       >
-        <div className="w-1/2 h-full relative">
+        <div className="md:w-1/2 w-full md:h-full relative">
           <img
-            className="w-full h-full object-cover"
+            className="md:w-full md:h-full w-[350px] h-[350px] object-cover"
             src={post?.post || derivedPost.post}
             alt=""
           />
@@ -189,10 +188,10 @@ function CommentSection({ setDoComment, derivedPost, setCounter, setExtend }) {
             </div>
           )}
         </div>
-        <div className="w-1/2 h-full flex flex-col bg-red-400">
+        <div className="md:w-1/2 w-full h-full flex flex-col bg-red-400">
           <div className="w-full h-full mx-auto bg-white">
             {/* Post Header */}
-            <div className="flex items-center p-3 border-b">
+            <div className="md:flex hidden items-center p-3 border-b">
               <div className="flex items-center flex-1">
                 <img
                   src={postUser.profilePic}
@@ -231,7 +230,7 @@ function CommentSection({ setDoComment, derivedPost, setCounter, setExtend }) {
             </div>
 
             {/* Comments Section */}
-            <div className="px-3 overflow-auto py-2 h-2/3">
+            <div className="px-3 md:block hidden  overflow-auto py-2 h-2/3">
               {localComments.length > 0 ? (
                 [...localComments]
                   .reverse()

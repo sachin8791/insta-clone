@@ -105,7 +105,7 @@ export default function AuthedUserProfilePage({
       {/* Header */}
 
       {/* Profile Section */}
-      <div className="flex flex-col md:flex-row items-start gap-8 mb-8">
+      <div className="flex flex-row items-start gap-8 mb-8">
         <input
           type="file"
           ref={fileInputRef}
@@ -114,7 +114,7 @@ export default function AuthedUserProfilePage({
           onChange={handleFileSelect}
         />
         {/* Profile Picture */}
-        <div className="w-32 h-32 rounded-full relative object-fill group overflow-hidden bg-gray-200 flex items-center cursor-pointer justify-center">
+        <div className="md:w-32 md:h-32 w-20 h-20 rounded-full relative object-fill group overflow-hidden bg-gray-200 flex items-center cursor-pointer justify-center">
           <div
             onClick={() => fileInputRef.current?.click()}
             style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}

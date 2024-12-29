@@ -42,6 +42,7 @@ function Stories() {
                   name: story.name,
                   profilePic: story.profilePic,
                   userName: story.userName,
+                  userId: story.userId,
                 });
                 setSampleStory(story.stories);
                 handleStoryOpen();

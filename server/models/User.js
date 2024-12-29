@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 require("../db/mongoose");
 const validator = require("validator");
 
-// Create a separate schema for stories but don't create a model from it
+// Story schema with 1-minute deletion
 const storySchema = new mongoose.Schema({
   story: {
     type: String,
@@ -14,11 +14,9 @@ const storySchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 86400, // 24 hours in seconds
   },
 });
 
-// Main user schema
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -78,13 +76,13 @@ const userSchema = new mongoose.Schema({
   story: [storySchema],
 });
 
-// Static method to clean all expired stories
+// Static method to clean stories older than 1 minute
 userSchema.statics.cleanAllExpiredStories = async function () {
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hrs
 
   try {
     const result = await this.updateMany(
-      {},
+      { "story.createdAt": { $lt: twentyFourHoursAgo } },
       {
         $pull: {
           story: {
@@ -103,7 +101,7 @@ userSchema.statics.cleanAllExpiredStories = async function () {
   }
 };
 
-// Pre-save middleware to clean expired stories
+// Pre-save middleware to clean expired stories for individual users
 userSchema.pre("save", async function (next) {
   const now = new Date();
   this.story = this.story.filter((story) => {
@@ -113,17 +111,15 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Set up periodic cleanup task
-const cleanupExpiredStories = async () => {
+// Run cleanup every 1 hour
+setInterval(async () => {
   try {
+    const User = mongoose.model("User");
     await User.cleanAllExpiredStories();
   } catch (error) {
     console.error("Error in periodic cleanup:", error);
   }
-};
-
-// Run cleanup every hour
-setInterval(cleanupExpiredStories, 3600000); // 1 hour in milliseconds
+}, 3600000); // 1 hour
 
 const User = mongoose.model("User", userSchema);
 

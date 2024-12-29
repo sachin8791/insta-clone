@@ -11,31 +11,46 @@ const PostRouter = require("./routes/Post");
 require("./db/mongoose");
 
 const app = express();
+
+const allowedOrigins = ["http://localhost:5173", "http://192.168.93.78:5173"];
+
+// Configure CORS
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error(`Blocked by CORS: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  })
+);
+
 const server = http.createServer(app);
 
-// Configure CORS for Express
-app.use(cors());
-
-// Configure CORS for Socket.IO
+// Configure Socket.IO
 const io = socketio(server, {
   cors: {
-    origin: "http://localhost:5173", // Replace with your frontend URL
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
   },
 });
-
 app.set("socketio", io);
 
 app.use(express.json());
 app.use(bodyParser.json());
 
+// Routers
 app.use(uploadRoutes);
 app.use(UserRouter);
 app.use(PostRouter);
 app.use("/api/auth", authRoutes);
 
+// Socket.IO Connection
 io.on("connection", (socket) => {
   console.log("New WebSocket connection");
 
@@ -44,6 +59,8 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(process.env.SERVER_PORT, () => {
-  console.log("Server running on port " + process.env.SERVER_PORT);
+// Start Server
+const PORT = process.env.SERVER_PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

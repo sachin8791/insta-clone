@@ -76,9 +76,9 @@ function SimpleUserProfile({
       {/* Header */}
 
       {/* Profile Section */}
-      <div className="flex flex-col md:flex-row items-start gap-8 mb-8">
+      <div className="flex flex-row items-start gap-8 mb-8">
         {/* Profile Picture */}
-        <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+        <div className="md:w-32 md:h-32 w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
           <img src={user.profilePic} alt="" />
         </div>
 
@@ -198,7 +198,7 @@ function SimpleUserPostContainer({
     <div className="py-16 text-center flex flex-row gap-2 flex-wrap">
       {posts.map((post) => (
         <img
-          className="w-60 h-60 object-cover cursor-pointer"
+          className="md:w-60 md:h-60 w-32 h-32 object-cover cursor-pointer"
           src={post.post}
           key={post._id}
           alt="prfile-photo"

@@ -94,12 +94,12 @@ function Feed() {
 
   // Show posts if we have them
   return (
-    <div className="flex flex-row relative justify-evenly">
+    <div className="flex flex-row relative mb-10 justify-evenly">
       <div>
         <Stories />
-        {posts.map((post) => (
+        {posts.map((post, i) => (
           <Post
-            key={post._id} // Using post._id instead of index
+            key={i} // Using post._id instead of index
             caption={post.caption}
             createdAt={post.createdAt}
             likes={post.likes}

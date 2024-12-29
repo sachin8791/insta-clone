@@ -10,6 +10,7 @@ function UploadUI({ setVisibleUpload }) {
   const [image, setImage] = useState(null);
   const [caption, setCaption] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [text, setText] = useState("");
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -32,6 +33,7 @@ function UploadUI({ setVisibleUpload }) {
     // Create FormData object to handle file upload
     const formData = new FormData();
     formData.append("caption", caption);
+    formData.append("text", text);
 
     // If image is a File object, append directly
     if (image instanceof File) {
@@ -55,14 +57,17 @@ function UploadUI({ setVisibleUpload }) {
     try {
       setIsLoading(true);
 
-      const uploadReq = await fetch("http://localhost:5000/upload/post", {
-        method: "POST",
-        headers: {
-          // Don't set Content-Type - let browser set it with boundary for FormData
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const uploadReq = await fetch(
+        `http://localhost:5000/upload/${uploadType}`,
+        {
+          method: "POST",
+          headers: {
+            // Don't set Content-Type - let browser set it with boundary for FormData
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       if (!uploadReq.ok) {
         const errorText = await uploadReq.text();
@@ -189,21 +194,23 @@ function UploadUI({ setVisibleUpload }) {
             </div>
           </div>
 
-          {uploadType === "post" && (
-            <div className="mb-6">
-              <label htmlFor="caption" className="block mb-2">
-                Caption
-              </label>
-              <textarea
-                id="caption"
-                placeholder="Write a caption..."
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows="3"
-              />
-            </div>
-          )}
+          <div className="mb-6">
+            <label htmlFor="caption" className="block mb-2">
+              Caption
+            </label>
+            <textarea
+              id="caption"
+              placeholder="Write a caption..."
+              value={uploadType === "post" ? caption : text}
+              onChange={(e) =>
+                uploadType === "post"
+                  ? setCaption(e.target.value)
+                  : setText(e.target.value)
+              }
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="3"
+            />
+          </div>
 
           <button
             type="submit"

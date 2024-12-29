@@ -38,7 +38,7 @@ export default function AuthedUserPostsContainer({
     <div className="py-16 text-center flex flex-row gap-2 flex-wrap">
       {posts.posts.map((post) => (
         <img
-          className="w-60 h-60 object-cover cursor-pointer"
+          className="md:w-60 md:h-60 w-32 h-32 object-cover cursor-pointer"
           src={post.post}
           key={post._id}
           alt="prfile-photo"
