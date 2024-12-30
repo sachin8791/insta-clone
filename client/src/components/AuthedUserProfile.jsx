@@ -101,7 +101,7 @@ export default function AuthedUserProfilePage({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl  mx-auto p-4">
       {/* Header */}
 
       {/* Profile Section */}
@@ -156,7 +156,7 @@ export default function AuthedUserProfilePage({
           </div>
 
           {/* Stats */}
-          <div className="flex gap-6 mb-4">
+          <div className="flex gap-4 mb-4">
             <div>
               <span className="font-semibold">{posts?.posts?.length || 0}</span>{" "}
               posts
@@ -205,8 +205,8 @@ export default function AuthedUserProfilePage({
       </div>
 
       {/* Tabs */}
-      <div className="border-t">
-        <div className="flex justify-center gap-12">
+      <div className="border-t flex justify-center ">
+        <div className="flex justify-center  gap-12">
           <button
             onClick={() => setSelectButton("posts")}
             className={`px-4 py-3 text-sm text-gray-500 ${

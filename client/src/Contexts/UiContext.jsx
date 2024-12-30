@@ -6,10 +6,29 @@ const UiContext = createContext();
 function UiProvider({ children }) {
   const [visibleUpload, setVisibleUpload] = useState(false);
   const [extend, setExtend] = useState(false);
+  const [searchIsOpen, setSearchIsOpen] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [visible, setIsVisible] = useState(false);
+
+  function handleHide() {
+    setIsVisible(false);
+  }
 
   return (
     <UiContext.Provider
-      value={{ visibleUpload, setVisibleUpload, extend, setExtend }}
+      value={{
+        visibleUpload,
+        setVisibleUpload,
+        extend,
+        setExtend,
+        searchIsOpen,
+        setSearchIsOpen,
+        popupMessage,
+        setPopupMessage,
+        visible,
+        setIsVisible,
+        handleHide,
+      }}
     >
       {children}
     </UiContext.Provider>

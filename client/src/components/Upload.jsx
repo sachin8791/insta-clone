@@ -5,7 +5,7 @@ import { ModernLoader } from "./ModernLoader";
 
 const token = localStorage.getItem("accessToken");
 
-function UploadUI({ setVisibleUpload }) {
+function UploadUI({ setVisibleUpload, setPopupMessage, setIsVisible }) {
   const [uploadType, setUploadType] = useState("post");
   const [image, setImage] = useState(null);
   const [caption, setCaption] = useState("");
@@ -78,6 +78,16 @@ function UploadUI({ setVisibleUpload }) {
       console.log("Upload successful:", res);
 
       // Clear form after successful upload
+
+      if (uploadReq.status === 200 || uploadReq.status === 201) {
+        setPopupMessage(
+          uploadType === "post"
+            ? "Post Uploaded Successfully"
+            : "Story Uploaded Successfully"
+        );
+        setIsVisible(true);
+      }
+
       setCaption("");
       setImage(null);
 
@@ -92,7 +102,9 @@ function UploadUI({ setVisibleUpload }) {
       console.error("Error uploading:", err.message);
       // You might want to add error feedback here
       // For example: setErrorMessage(err.message);
-      throw err;
+      setIsLoading(false);
+      setPopupMessage("Error Uploading");
+      setIsVisible(true);
     }
   };
 

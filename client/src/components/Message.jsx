@@ -72,7 +72,7 @@ function MessagesPage() {
   ];
 
   return (
-    <div className="flex h-screen">
+    <div className="md:flex hidden h-screen">
       {/* Left sidebar */}
       <div className="w-80 border-r flex flex-col">
         <div className="p-4 border-b flex items-center justify-between">

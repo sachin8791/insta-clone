@@ -102,7 +102,7 @@ function SimpleUserProfile({
           </div>
 
           {/* Stats */}
-          <div className="flex gap-6 mb-4">
+          <div className="flex gap-4 mb-4">
             <div>
               <span className="font-semibold">{posts?.length || 0}</span> posts
             </div>
@@ -195,10 +195,10 @@ function SimpleUserPostContainer({
   }
 
   return (
-    <div className="py-16 text-center flex flex-row gap-2 flex-wrap">
+    <div className="py-16 text-center justify-normal flex flex-row md:gap-2 gap-[4px] flex-wrap">
       {posts.map((post) => (
         <img
-          className="md:w-60 md:h-60 w-32 h-32 object-cover cursor-pointer"
+          className="md:w-60 md:h-60 xs:w-[150px] xs:h-[150px]  w-[120px] h-[120px] object-cover cursor-pointer"
           src={post.post}
           key={post._id}
           alt="prfile-photo"

@@ -65,7 +65,11 @@ export default function SearchUsers({ searchIsOpen, setSearchIsOpen }) {
     <div
       className={`w-[400px]  h-full bg-white shadow-md fixed top-0 overflow-auto 
       transition-all duration-300 ease-in-out
-      ${searchIsOpen ? "left-64 opacity-100" : "-left-[400px] opacity-0"}
+      ${
+        searchIsOpen
+          ? "md:left-64 left-0 opacity-100"
+          : "-left-[400px] opacity-0"
+      }
       flex flex-col rounded-e-lg`}
     >
       <div className="flex flex-row items-center justify-between">

@@ -10,16 +10,20 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuthUser } from "../hooks/GetAuthUser";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import SearchUsers from "./SearchUsers";
 
-function LeftSidebar({ setiIsAuthenticated, setVisibleUpload }) {
+function LeftSidebar({
+  setiIsAuthenticated,
+  setVisibleUpload,
+  searchIsOpen,
+  setSearchIsOpen,
+}) {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
   const { authUser } = useAuthUser(token);
-  const [searchIsOpen, setSearchIsOpen] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -43,9 +47,9 @@ function LeftSidebar({ setiIsAuthenticated, setVisibleUpload }) {
 
   return (
     <div className="md:w-64 fixed md:top-0 z-10 md:bg-transparent bg-white bottom-0 left-0 right-0  gap-2 border-r md:p-4 p-0 flex flex-col">
-      <div className="mb-8 hidden md:flex px-2">
-        <h1 className="text-2xl font-semibold">Instagram</h1>
-      </div>
+      <Link className="mb-8 hidden md:flex px-2" to="/">
+        <img src="public/ig.svg" className="h-[28px]" alt="" />
+      </Link>
       <nav className="flex md:border-0 border-t-[1px] border-gray-400 md:flex-col w-full justify-between flex-row gap-1">
         <NavLink
           to="/"
